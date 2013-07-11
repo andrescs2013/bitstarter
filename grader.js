@@ -24,6 +24,7 @@ References:
 var fs = require('fs');
 var program = require('commander');
 var cheerio = require('cheerio');
+var rest = require('restler');
 var HTMLFILE_DEFAULT = "index.html";
 var CHECKSFILE_DEFAULT = "checks.json";
 
@@ -50,7 +51,6 @@ var buildfn = function(html_file) {
         if (result instanceof Error) {
             console.error('Error: ' + util.format(response.message));
         } else {
-            console.error("Wrote %s", csvfile);
             fs.writeFileSync(html_file, result);
         }
     };
@@ -83,11 +83,11 @@ if(require.main == module) {
     if (program.url) {
 	var html_file = "temp_html_file.txt";
 	var response2console = buildfn(html_file);
-	rest.get(option.url).on('complete', response2console);
-	var checkJson = checkHtmlURL(html_file, program.checks);
+	rest.get(program.url).on('complete', response2console);
+	var checkJson = checkHtmlFile(html_file, program.checks);
     }
     else {
-	var checkJson = checkHtmlURL(program.file, program.checks);
+	var checkJson = checkHtmlFile(program.file, program.checks);
     };	
     var outJson = JSON.stringify(checkJson, null, 4);
     console.log(outJson);
