@@ -27,6 +27,7 @@ var cheerio = require('cheerio');
 var HTMLFILE_DEFAULT = "index.html";
 var CHECKSFILE_DEFAULT = "checks.json";
 
+
 var assertFileExists = function(infile) {
     var instr = infile.toString();
     if(!fs.existsSync(instr)) {
@@ -42,6 +43,18 @@ var cheerioHtmlFile = function(htmlfile) {
 
 var loadChecks = function(checksfile) {
     return JSON.parse(fs.readFileSync(checksfile));
+};
+
+var buildfn = function(html_file) {
+    var response2console = function(result, response) {
+        if (result instanceof Error) {
+            console.error('Error: ' + util.format(response.message));
+        } else {
+            console.error("Wrote %s", csvfile);
+            fs.writeFileSync(html_file, result);
+        }
+    };
+    return response2console;
 };
 
 var checkHtmlFile = function(htmlfile, checksfile) {
@@ -64,9 +77,18 @@ var clone = function(fn) {
 if(require.main == module) {
     program
         .option('-c, --checks <check_file>', 'Path to checks.json', clone(assertFileExists), CHECKSFILE_DEFAULT)
-        .option('-f, --file <html_file>', 'Path to index.html', clone(assertFileExists), HTMLFILE_DEFAULT)
+        .option('-f, --file <html_file>', 'Path to index.html', clone(assertFileExists),HTMLFILE_DEFAULT)
+	.option('-u, --url <html_url>', 'url to be checked')
         .parse(process.argv);
-    var checkJson = checkHtmlFile(program.file, program.checks);
+    if (program.url) {
+	var html_file = "temp_html_file.txt";
+	var response2console = buildfn(html_file);
+	rest.get(option.url).on('complete', response2console);
+	var checkJson = checkHtmlURL(html_file, program.checks);
+    }
+    else {
+	var checkJson = checkHtmlURL(program.file, program.checks);
+    };	
     var outJson = JSON.stringify(checkJson, null, 4);
     console.log(outJson);
 } else {
